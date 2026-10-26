@@ -1,0 +1,21 @@
+{
+  "name": "docconnect-project",
+  "private": true,
+  "workspaces": [
+    "MERN-INFOZIANT-PROJECT-main/backend",
+    "MERN-INFOZIANT-PROJECT-main/frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n backend,frontend \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "npm run dev --workspace=docconnect-backend",
+    "start:backend": "npm run start --workspace=docconnect-backend",
+    "setup:admin": "npm run setup:admin --workspace=docconnect-backend",
+    "setup:doctors": "npm run setup:doctors --workspace=docconnect-backend",
+    "test:backend": "npm run test --workspace=docconnect-backend",
+    "dev:frontend": "npm run dev --workspace=docconnect-frontend",
+    "build:frontend": "npm run build --workspace=docconnect-frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}

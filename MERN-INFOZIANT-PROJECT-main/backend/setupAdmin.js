@@ -1,4 +1,5 @@
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 const crypto = require('crypto');
 const mongoose = require('mongoose');
 const Admin = require('./models/Admin');
@@ -12,7 +13,13 @@ const setupAdmin = async () => {
     const existingAdmin = await Admin.findOne({ email });
 
     if (existingAdmin) {
-      console.log(`Admin account already exists for ${email}; its password was not changed.`);
+      if (process.env.ADMIN_PASSWORD) {
+        existingAdmin.password = process.env.ADMIN_PASSWORD;
+        await existingAdmin.save();
+        console.log(`Admin account password updated successfully for ${email}.`);
+      } else {
+        console.log(`Admin account already exists for ${email}; its password was not changed.`);
+      }
       return;
     }
 

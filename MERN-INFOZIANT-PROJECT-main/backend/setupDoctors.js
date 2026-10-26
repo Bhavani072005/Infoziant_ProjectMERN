@@ -1,7 +1,8 @@
 const mongoose = require('mongoose');
 const Doctor = require('./models/Doctor');
 const connectDB = require('./config/db');
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.resolve(__dirname, '.env') });
 
 const doctors = [
   {

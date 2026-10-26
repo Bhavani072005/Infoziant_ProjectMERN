@@ -11,21 +11,29 @@ try {
 const getMongoUri = () => {
   const uri = process.env.MONGODB_URI?.trim();
   if (!uri) {
-    throw new Error('MONGODB_URI is required. Configure the MongoDB Atlas connection in backend/.env.');
+    throw new Error('MONGODB_URI is required. Configure the MongoDB Atlas or local MongoDB connection in backend/.env.');
+  }
+
+  if (uri.includes('<username>') || uri.includes('<password>') || uri.includes('<cluster>')) {
+    throw new Error('MONGODB_URI in backend/.env still contains placeholder values (<username>, <password>, or <cluster>). Please update backend/.env with your actual MongoDB connection string.');
   }
 
   let parsedUri;
   try {
     parsedUri = new URL(uri);
   } catch {
-    throw new Error('MONGODB_URI must be a valid MongoDB Atlas connection string.');
+    throw new Error('MONGODB_URI must be a valid MongoDB connection string.');
   }
+
+  const hostname = parsedUri.hostname.toLowerCase();
+  const isAtlas = hostname.endsWith('.mongodb.net');
+  const isLocal = ['localhost', '127.0.0.1', '::1'].includes(hostname);
 
   if (
     !['mongodb:', 'mongodb+srv:'].includes(parsedUri.protocol) ||
-    !parsedUri.hostname.toLowerCase().endsWith('.mongodb.net')
+    (!isAtlas && !isLocal)
   ) {
-    throw new Error('MONGODB_URI must point to a MongoDB Atlas cluster (*.mongodb.net).');
+    throw new Error('MONGODB_URI must point to a MongoDB Atlas cluster (*.mongodb.net) or local MongoDB (localhost).');
   }
 
   return uri;

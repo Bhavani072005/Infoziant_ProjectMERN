@@ -2,9 +2,30 @@
 
 ## Run locally
 
-Run the backend from `backend` with `npm install` and `npm start`, then run the
-frontend from `frontend` with `npm install` and `npm run dev`. The Vite
-development server proxies `/api` requests to `http://localhost:5000`.
+Run these commands from the repository root (the folder containing this
+README's parent project folder). This root package setup installs both the
+backend and frontend dependencies:
+
+```powershell
+npm install
+Copy-Item .\MERN-INFOZIANT-PROJECT-main\backend\.env.example .\MERN-INFOZIANT-PROJECT-main\backend\.env
+notepad .\MERN-INFOZIANT-PROJECT-main\backend\.env
+```
+
+In `backend\.env`, set `MONGODB_URI` to your MongoDB Atlas connection string.
+Replace the example `JWT_SECRET`, `ADMIN_EMAIL`, and `ADMIN_PASSWORD` values.
+Do not share or commit this file. Then create the admin account once and start both servers:
+
+```powershell
+npm run setup:admin
+npm run dev
+```
+
+Open the local URL printed by Vite. The frontend calls the backend at
+`http://localhost:5000` in local development. `npm run dev` starts both
+servers from the repository root. If MongoDB Atlas rejects the connection,
+check the connection string, database user credentials, and Atlas network
+access list.
 
 ## Deploy to Render
 
