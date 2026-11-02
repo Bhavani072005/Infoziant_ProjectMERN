@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import LoadingIndicator from '../../components/LoadingIndicator';
 import { apiUrl } from '../../api';
 import './PatientLogin.css';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 const PatientRegister = () => {
   const navigate = useNavigate();
@@ -16,6 +18,77 @@ const PatientRegister = () => {
   const [error, setError] = useState('');
 
   const { name, email, password, phone } = formData;
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+
+    const scriptId = 'google-one-tap-script';
+    const existing = document.getElementById(scriptId);
+
+    if (!existing) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+
+    const handleGoogleCredential = async (response) => {
+      try {
+        setError('');
+        setIsSubmitting(true);
+
+        const res = await fetch(apiUrl('/api/patient/google'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.message || 'Google sign-in failed.');
+          return;
+        }
+
+        localStorage.setItem('userInfo', JSON.stringify(data));
+        localStorage.setItem('userPhone', data.phone);
+        navigate('/patient/home');
+      } catch (err) {
+        console.error('Google signup error:', err);
+        setError('Google sign-in is unavailable right now. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    const initGoogle = () => {
+      if (!window.google || !window.google.accounts) return;
+
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+      });
+
+      window.google.accounts.id.renderButton(document.getElementById('google-signup-button'), {
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'pill',
+        logo_alignment: 'left'
+      });
+    };
+
+    const timer = setInterval(() => {
+      if (window.google && window.google.accounts) {
+        initGoogle();
+        clearInterval(timer);
+      }
+    }, 200);
+
+    return () => clearInterval(timer);
+  }, [GOOGLE_CLIENT_ID, navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -124,6 +197,13 @@ const PatientRegister = () => {
           <button type="submit" className="login-button" disabled={isSubmitting}>
             {isSubmitting ? <LoadingIndicator label="Creating account..." /> : 'Register'}
           </button>
+
+          {GOOGLE_CLIENT_ID && (
+            <div className="google-signin-wrap">
+              <div className="google-divider"><span>or continue with</span></div>
+              <div id="google-signup-button" aria-label="Continue with Google" />
+            </div>
+          )}
         </form>
 
         <div className="login-footer">

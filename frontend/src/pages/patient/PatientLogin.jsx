@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import LoadingIndicator from '../../components/LoadingIndicator';
 import useLoginBackNavigation from '../../hooks/useLoginBackNavigation';
 import { apiUrl } from '../../api';
 import './PatientLogin.css';
+
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || '';
 
 const PatientLogin = () => {
   useLoginBackNavigation();
@@ -13,6 +15,77 @@ const PatientLogin = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!GOOGLE_CLIENT_ID) return;
+
+    const scriptId = 'google-one-tap-script';
+    const existing = document.getElementById(scriptId);
+
+    if (!existing) {
+      const script = document.createElement('script');
+      script.id = scriptId;
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    }
+
+    const handleGoogleCredential = async (response) => {
+      try {
+        setError('');
+        setIsSubmitting(true);
+
+        const res = await fetch(apiUrl('/api/patient/google'), {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ credential: response.credential })
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.message || 'Google sign-in failed.');
+          return;
+        }
+
+        localStorage.setItem('userInfo', JSON.stringify(data));
+        localStorage.setItem('userPhone', data.phone);
+        navigate('/patient/home');
+      } catch (err) {
+        console.error('Google login error:', err);
+        setError('Google sign-in is unavailable right now. Please try again.');
+      } finally {
+        setIsSubmitting(false);
+      }
+    };
+
+    const initializeGoogle = () => {
+      if (!window.google || !window.google.accounts) return;
+
+      window.google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: handleGoogleCredential,
+      });
+
+      window.google.accounts.id.renderButton(document.getElementById('google-signin-button'), {
+        theme: 'outline',
+        size: 'large',
+        text: 'continue_with',
+        shape: 'pill',
+        logo_alignment: 'left'
+      });
+    };
+
+    const timer = setInterval(() => {
+      if (window.google && window.google.accounts) {
+        initializeGoogle();
+        clearInterval(timer);
+      }
+    }, 200);
+
+    return () => clearInterval(timer);
+  }, [GOOGLE_CLIENT_ID, navigate]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -99,6 +172,13 @@ const PatientLogin = () => {
           <button type="submit" className="login-button" disabled={isSubmitting}>
             {isSubmitting ? <LoadingIndicator label="Signing in..." /> : 'Sign In'}
           </button>
+
+          {GOOGLE_CLIENT_ID && (
+            <div className="google-signin-wrap">
+              <div className="google-divider"><span>or continue with</span></div>
+              <div id="google-signin-button" aria-label="Continue with Google" />
+            </div>
+          )}
         </form>
 
         <div className="login-footer">

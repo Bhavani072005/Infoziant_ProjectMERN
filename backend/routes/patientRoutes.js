@@ -1,6 +1,7 @@
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const { OAuth2Client } = require('google-auth-library');
 const Patient = require('../models/Patient');
 const { protect } = require('../middleware/auth');
 const {
@@ -16,8 +17,22 @@ const {
 } = require('../utils/passwordResetEmail');
 
 const router = express.Router();
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const passwordResetResponseMessage = 'If an eligible account exists for that address, reset instructions may be sent. This response does not confirm whether the email is registered or whether delivery completed.';
+
+const buildPatientTokenResponse = (patient) => ({
+  _id: patient._id,
+  name: patient.name,
+  email: patient.email,
+  phone: patient.phone,
+  role: 'patient',
+  token: jwt.sign(
+    { id: patient._id, role: 'patient' },
+    process.env.JWT_SECRET || 'docconnect_secret_key_2024',
+    { expiresIn: '30d' }
+  )
+});
 
 // Register new patient
 router.post('/register', async (req, res) => {
@@ -43,21 +58,7 @@ router.post('/register', async (req, res) => {
       phone
     });
 
-    // Generate token
-    const token = jwt.sign(
-      { id: patient._id, role: 'patient' },
-      process.env.JWT_SECRET || 'docconnect_secret_key_2024',
-      { expiresIn: '30d' }
-    );
-
-    res.status(201).json({
-      _id: patient._id,
-      name: patient.name,
-      email: patient.email,
-      phone: patient.phone,
-      role: 'patient',
-      token
-    });
+    res.status(201).json(buildPatientTokenResponse(patient));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -88,23 +89,57 @@ router.post('/login', async (req, res) => {
       return res.status(403).json({ message: 'Your account is inactive. Please contact support.' });
     }
 
-    // Generate token
-    const token = jwt.sign(
-      { id: patient._id, role: 'patient' },
-      process.env.JWT_SECRET || 'docconnect_secret_key_2024',
-      { expiresIn: '30d' }
-    );
-
-    res.json({
-      _id: patient._id,
-      name: patient.name,
-      email: patient.email,
-      phone: patient.phone,
-      role: 'patient',
-      token
-    });
+    res.json(buildPatientTokenResponse(patient));
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+});
+
+router.post('/google', async (req, res) => {
+  try {
+    const { credential } = req.body || {};
+
+    if (!credential || typeof credential !== 'string') {
+      return res.status(400).json({ message: 'Google sign-in credential is required.' });
+    }
+
+    if (!process.env.GOOGLE_CLIENT_ID) {
+      return res.status(503).json({ message: 'Google sign-in is not configured yet.' });
+    }
+
+    const ticket = await googleClient.verifyIdToken({
+      idToken: credential,
+      audience: process.env.GOOGLE_CLIENT_ID
+    });
+
+    const payload = ticket.getPayload();
+    if (!payload || !payload.email) {
+      return res.status(401).json({ message: 'Google authentication failed.' });
+    }
+
+    const email = payload.email.trim().toLowerCase();
+    const name = payload.name || payload.given_name || 'Google User';
+
+    let patient = await Patient.findOne({ email });
+
+    if (!patient) {
+      patient = await Patient.create({
+        name,
+        email,
+        password: `google-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        phone: 'Not provided',
+        isActive: true
+      });
+    }
+
+    if (patient.isActive === false) {
+      return res.status(403).json({ message: 'Your account is inactive. Please contact support.' });
+    }
+
+    res.json(buildPatientTokenResponse(patient));
+  } catch (error) {
+    console.error('Google patient login failed:', error);
+    return res.status(401).json({ message: 'Google sign-in failed. Please try again.' });
   }
 });
 
