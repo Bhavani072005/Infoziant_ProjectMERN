@@ -54,12 +54,7 @@ const PatientLogin = () => {
         navigate('/patient/home');
       } catch (err) {
         console.error('Google login error:', err);
-        const apiBase = import.meta.env.VITE_API_URL;
-        if (!apiBase) {
-          setError('Server URL not configured. Set VITE_API_URL in Vercel environment variables and redeploy.');
-        } else {
-          setError(Could not reach the server at \. Check that Render backend is running.);
-        }
+        setError('Google sign-in is unavailable. Check that VITE_API_URL is set on Vercel and the Render backend is running.');
       } finally {
         setIsSubmitting(false);
       }
