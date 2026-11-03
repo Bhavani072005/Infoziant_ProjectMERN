@@ -61,6 +61,8 @@ The frontend communicates with the backend through HTTP API requests. The backen
 
 ## 7. Database Design
 
+<img width="742" height="611" alt="image" src="https://github.com/user-attachments/assets/84fcd297-3304-48af-a98f-64040f8a4b18" />
+
 The application uses MongoDB collections.
 
 - **Patients:** Stores patient account and profile information.
@@ -84,7 +86,7 @@ Other authentication and management routes are available in the backend source c
 ## 9. Live Deployment
 
 - **Frontend:** https://mern-infoziant-project.vercel.app/
-- **Backend:** Add your public Render backend URL here.
+- **Backend:** https://mern-infoziant-project-7.onrender.com
 - **GitHub Repository:** https://github.com/syadali025-commits/MERN-INFOZIANT-PROJECT
 
 ## 10. Run the Project Locally
