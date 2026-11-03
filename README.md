@@ -63,24 +63,87 @@ The frontend communicates with the backend through HTTP API requests. The backen
 
 <img width="742" height="611" alt="image" src="https://github.com/user-attachments/assets/84fcd297-3304-48af-a98f-64040f8a4b18" />
 
-The application uses MongoDB collections.
+# DOC-CONNECT – Database Design
 
-- **Patients:** Stores patient account and profile information.
-- **Doctors:** Stores doctor account and professional information.
-- **Admins:** Stores administrator login information.
-- **Bookings:** Stores appointment details, patient and doctor references, date, time, symptoms, and appointment status.
+## i. Introduction
+
+DOC-CONNECT uses MongoDB as its database. Mongoose is used to define schemas and interact with the database.
+
+## ii. Main Collections
+
+The application uses the following main collections:
+
+### Patients
+Stores information about registered patients and their accounts.
+
+### Doctors
+Stores doctor information and login details.
+
+### Admins
+Stores administrator account information and access details.
+
+### Bookings
+Stores appointment details, including:
+- Patient reference
+- Doctor reference
+- Appointment date
+- Appointment time
+- Symptoms
+- Appointment status
+- Payment status
+
+## iii. Database Relationships
+
+- One patient can create multiple bookings.
+- One doctor can receive multiple bookings.
+- Each booking is associated with one patient and one doctor.
+- Admins manage the application.
+
+## iv. Database Technology
+
+- Database: MongoDB Atlas
+- ODM: Mongoose
+- Data format: BSON (JSON-like documents)
+
+## v. Conclusion
+
+The MongoDB database stores patient, doctor, admin, and appointment information. It helps DOC-CONNECT manage appointment bookings and track their status.
 
 ## 8. API Documentation
+# DOC-CONNECT – API Documentation
 
-The backend exposes REST APIs under the `/api` path.
+## i. Introduction
+
+DOC-CONNECT uses REST APIs to connect the React frontend with the Node.js and Express.js backend. These APIs handle authentication, appointment booking, and queue management.
+
+## ii. Booking APIs
 
 | Method | Endpoint | Purpose |
 |---|---|---|
-| POST | `/api/booking` | Create an appointment |
-| GET | `/api/booking/patient` | Get logged-in patient's bookings |
-| GET | `/api/booking/doctor` | Get logged-in doctor's bookings |
-| PATCH | `/api/booking/:id/status` | Update appointment status |
+| POST | `/api/booking` | Create a new appointment booking |
+| GET | `/api/booking/patient` | Get bookings for the logged-in patient |
+| GET | `/api/booking/doctor` | Get bookings for the logged-in doctor |
+| PATCH | `/api/booking/:id/status` | Update an appointment's status |
 
+## iii. Authentication
+
+The application uses JWT-based authentication to protect authorized routes. Patients and doctors access their respective dashboards after login.
+
+## iv. Appointment Status Management
+
+The doctor can update an appointment's status. Patients can view the latest booking status and queue information through their dashboard.
+
+## v. Backend Technologies
+
+- Node.js
+- Express.js
+- MongoDB
+- Mongoose
+- JSON Web Token (JWT)
+
+## vi. Note
+
+The endpoints listed above are the booking routes currently documented. Authentication, admin, doctor-management, and other routes should be added after checking the actual backend source code.
 Other authentication and management routes are available in the backend source code.
 
 ## 9. Live Deployment
