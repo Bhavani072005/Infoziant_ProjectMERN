@@ -144,17 +144,25 @@ Never upload `.env` files, database credentials, or private secrets to GitHub.
 
 ## 11. Application Screenshots
 
-Add your application screenshots in the `screenshots/` folder and link them here.
+### Landing Page
+![Landing Page](Screenshots/Landing%20page.jpeg)
 
-Suggested screenshots:
-- Landing Page
-- Patient Login and Registration
-- Patient Dashboard
-- Doctor Selection and Appointment Booking
-- Payment Page
-- Appointment Status Page
-- Doctor Dashboard
-- Admin Dashboard
+### Patient Portal
+![Patient Login](Screenshots/Patient%20Login.jpeg)
+
+![Patient Dashboard](Screenshots/Patient%20Dashboard.jpeg)
+
+![Appointment Booking](Screenshots/Appoinment%20Booking.jpeg)
+
+![Payment Page](Screenshots/Payment%20Page.jpeg)
+
+![Appointment Status](Screenshots/Appoinment%20Status.jpeg)
+
+### Doctor Portal
+![Doctor Dashboard](Screenshots/Doctor%20Dashboard.jpeg)
+
+### Admin Portal
+![Admin Dashboard](Screenshots/Admin%20Dashboard.jpeg)
 
 ## 12. Future Enhancements
 
